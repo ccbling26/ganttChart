@@ -1,24 +1,22 @@
-# echarts
+# ganttChart
 
-## Project setup
-```
+## 相关技术
+### 前端
+- Vue：https://cn.vuejs.org
+- ECharts：https://echarts.apache.org/zh/index.html
+### 后端
+- gin-gonic：https://github.com/gin-gonic/gin
+- go-gorm：https://github.com/go-gorm/gorm
+- viper：https://github.com/spf13/viper
+
+## 项目启动
+### 前端
+```bash
 npm install
-```
-
-### Compiles and hot-reloads for development
-```
 npm run serve
 ```
-
-### Compiles and minifies for production
+### 后端
+```bash
+go mod tidy
+go run main.go
 ```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
