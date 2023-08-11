@@ -3,13 +3,13 @@
 .idea
 .vscode
 
-# echarts
-echarts/node_modules
-echarts/dist
-echarts/npm-debug.log*
-echarts/yarn-debug.log*
-echarts/yarn-error.log*
-echarts/pnpm-debug.log*
+# frontend
+frontend/node_modules
+frontend/dist
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
 
 # backend
 backend/config/config.yaml
