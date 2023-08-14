@@ -30,6 +30,7 @@
                 range-separator="至"
                 :clearable="false"
                 :picker-options="timeRangePickerOptions"
+                :editable="false"
                 format="yyyy-MM-dd HH:mm:ss">
             </el-date-picker>
           </el-col>
@@ -40,6 +41,7 @@
                 type="datetime"
                 :clearable="false"
                 :picker-options="faultPickerOptions"
+                :editable="false"
                 format="yyyy-MM-dd HH:mm:ss">
             </el-date-picker>
           </el-col>
@@ -152,17 +154,37 @@ export default {
     faultPickerOptions() {
       return {
         disabledDate: (time) => {
-          return time > new Date() || time < this.time_range[0] || time > this.time_range[1]
+          return this.compareDate(time, new Date()) === 1 ||
+              this.compareDate(this.time_range[0], time) === 1 ||
+              this.compareDate(time, this.time_range[1]) === 1
         },
         selectableRange: this.faultSelectableRange(this.time_range, this.fault_time),
       }
     },
   },
   methods: {
-    isTheSameDay(start_time, end_time) {
-      return start_time.getYear() === end_time.getYear() &&
-          start_time.getMonth() === end_time.getMonth() &&
-          start_time.getDate() === end_time.getDate()
+    compareDate(time1, time2) {
+      const year1 = time1.getFullYear()
+      const month1 = time1.getMonth() + 1
+      const day1 = time1.getDate()
+      const year2 = time2.getFullYear()
+      const month2 = time2.getMonth() + 1
+      const day2 = time2.getDate()
+      if (year1 > year2) {
+        return 1
+      } else if (year1 < year2) {
+        return -1
+      } else if (month1 > month2) {
+        return 1
+      } else if (month1 < month2) {
+        return -1
+      } else if (day1 > day2) {
+        return 1
+      } else if (day1 < day2) {
+        return -1
+      } else {
+        return 0
+      }
     },
     faultSelectableRange(time_range, fault_time) {
       let start = "00:00:00"
@@ -170,12 +192,12 @@ export default {
       const start_time = time_range[0]
       const end_time = time_range[1]
       if (fault_time) {
-        if (start_time && this.isTheSameDay(fault_time, start_time)) {
+        if (start_time && this.compareDate(fault_time, start_time) === 0) {
           start = moment(start_time).format("HH:mm:ss")
         }
-        if (end_time && this.isTheSameDay(fault_time, end_time)) {
+        if (end_time && this.compareDate(fault_time, end_time) === 0) {
           end = moment(end_time).format("HH:mm:ss")
-        } else if (!end_time && this.isTheSameDay(fault_time, new Date())) {
+        } else if (!end_time && this.compareDate(fault_time, new Date()) === 0) {
           end = moment(new Date()).format("HH:mm:ss")
         }
       }
