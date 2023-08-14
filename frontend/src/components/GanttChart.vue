@@ -80,13 +80,7 @@ export default {
     this.chart = ECharts.init(document.getElementById("ganttChart"));
     const now = new Date()
     const initialOption = {
-      tooltip: {
-        formatter: function (params) {
-          const start = moment(params.value[1]).format("YYYY-MM-DD HH:mm:ss")
-          const end = moment(params.value[2]).format("YYYY-MM-DD HH:mm:ss")
-          return start + " - " + end;
-        }
-      },
+      tooltip: {},
       title: {
         text: "甘特图",
         left: "center",
@@ -99,7 +93,8 @@ export default {
           formatter: function (val) {
             val = Math.max(now.getTime() - 24 * 60 * 60 * 1000, val)
             return moment(val).format("YYYY-MM-DD HH:mm:ss");
-          }
+          },
+          hideOverlap: true,
         },
         position: "top",
       },
@@ -110,23 +105,37 @@ export default {
       series: [],
       dataZoom: [
         {
-          type: "slider",
-          show: true,
+          type: "inside",
+          id: 'insideX',
           xAxisIndex: 0,
-          start: 20,
-          end: 80,
-          minSpan: 5,
-        },
-        {
-          type: 'inside',
+          start: 0,
+          end: 100,
+          zoomOnMouseWheel: false,
         },
         {
           type: "slider",
-          show: true,
+          id: 'sliderX',
+          xAxisIndex: 0,
+          start: 0,
+          end: 100,
+          zoomOnMouseWheel: false,
+        },
+        {
+          type: "inside",
+          id: 'insideY',
           yAxisIndex: 0,
-          start: 20,
-          end: 80,
-          minSpan: 5,
+          start: 50,
+          end: 100,
+          zoomOnMouseWheel: false,
+          moveOnMouseWheel: true,
+        },
+        {
+          type: 'slider',
+          id: 'sliderY',
+          yAxisIndex: 0,
+          start: 50,
+          end: 100,
+          zoomOnMouseWheel: false,
         },
       ],
     }
@@ -172,23 +181,52 @@ export default {
       }
       return start + " - " + end
     },
-    renderChart(startTimestamp, endTimestamp) {
+    renderChart(startTimestamp, endTimestamp, faultTimestamp) {
       this.chart.setOption({
         xAxis: {
           min: startTimestamp,
           max: endTimestamp,
-          scale: true,
+          type: 'time',
+          position: 'top',
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: ["gray"],
+              width: 0.5,
+              type: "dashed",
+            }
+          },
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            lineStyle: {
+              color: '#929ABA'
+            }
+          },
           axisLabel: {
+            color: '#929ABA',
+            inside: false,
+            align: 'center',
             formatter: function (val) {
               val = Math.max(startTimestamp, val)
               return moment(val).format("YYYY-MM-DD HH:mm:ss");
-            }
+            },
+            hideOverlap: true,
           },
-          position: "top",
+          scale: true,
         },
         yAxis: {
           type: "category",
           data: this.ganttData.categories,
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: ["gray"],
+              width: 0.5,
+              type: "solid",
+            }
+          },
         },
         series: [
           {
@@ -202,8 +240,50 @@ export default {
               y: 0
             },
             data: this.ganttData.data,
+            tooltip: {
+              formatter: function (params) {
+                const start = moment(params.value[1]).format("YYYY-MM-DD HH:mm:ss")
+                const end = moment(params.value[2]).format("YYYY-MM-DD HH:mm:ss")
+                return "产品线: " + params.name + "<br>开始时间: " + start + "<br>结束时间: " + end;
+              }
+            }
+          },
+          {
+            type: 'line',
+            name: "故障时间",
+            animation: false,
+            markLine: {
+              data: [
+                {
+                  xAxis: faultTimestamp,
+                  label: {
+                    show: false
+                  },
+                  symbolKeepAspect: true,
+                  lineStyle: {
+                    color: "#ff0000",
+                    width: 2,
+                    type: "dashed",
+                  },
+                },
+              ],
+              symbol: ["none", "none"],
+              tooltip: {
+                formatter: function (params) {
+                  return "故障时间<br>" + moment(params["data"]["xAxis"]).format("YYYY-MM-DD HH:mm:ss");
+                }
+              }
+            },
+            emphasis: {
+              label: {
+                show: false,
+              }
+            }
           },
         ],
+        grid: {
+          containLabel: true
+        },
       });
     },
     async clickButton() {
@@ -225,7 +305,7 @@ export default {
       const faultTimestamp = this.fault_time.getTime()
 
       this.ganttData = await queryJobs(this.product_lines_selected, startTimestamp, endTimestamp, faultTimestamp);
-      this.renderChart(startTimestamp, endTimestamp);
+      this.renderChart(startTimestamp, endTimestamp, faultTimestamp);
     },
     async resetButton() {
       const now = new Date().getTime()
@@ -277,7 +357,6 @@ function renderGanttItem(params, api) {
         height: params.coordSys.height
       }
   );
-  console.log(rectShape)
   return (
       rectShape && {
         type: "rect",

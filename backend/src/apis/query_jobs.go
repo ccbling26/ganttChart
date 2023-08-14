@@ -7,6 +7,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +31,7 @@ type JobsResult struct {
 type JobSlice [][]interface{}
 
 func (j JobSlice) Len() int           { return len(j) }
-func (j JobSlice) Less(x, y int) bool { return j[x][0].(int64) < j[y][0].(int64) }
+func (j JobSlice) Less(x, y int) bool { return j[x][0].(int64) > j[y][0].(int64) }
 func (j JobSlice) Swap(x, y int)      { j[x], j[y] = j[y], j[x] }
 
 func calPriority(origin int64, startTimestamp int64, faultTimestamp int64, duration int64) int64 {
@@ -52,7 +53,7 @@ func sortIntermediateJobData(data map[string]IntermediateJobItem) ([]string, []G
 	var ganttData []GanttData
 	for i, val := range intermediateData {
 		name := val[1].(string)
-		categories = append(categories, name)
+		categories = append(categories, strings.Split(strings.Split(name, "_")[0], ".")[1])
 
 		values := data[name].values
 		for _, value := range values {
@@ -89,6 +90,7 @@ func generateJobsData(productLines []string, startTimestamp int64, endTimestamp 
 				val.values,
 				[]interface{}{0, start, end},
 			)
+			intermediateJobData[job] = val
 		} else {
 			intermediateJobData[job] = IntermediateJobItem{
 				priority: calPriority(math.MaxInt64, start, faultTimestamp, duration),
