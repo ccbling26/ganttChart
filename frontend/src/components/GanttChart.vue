@@ -1,10 +1,12 @@
 <template>
   <el-container style="height: 100%; width: 100%">
-    <el-header style="height: 5%; width:100%; text-align: center; background-color: #B3C0D1; color: #333;">
-      甘特图
+    <el-header style="height: 5%; width:100%; text-align: center; background-color: #409EFF; color: white;">
+      <div style="height: 100%; width: 100%; align-items: center; justify-content: center; display: flex">
+        甘特图
+      </div>
     </el-header>
     <el-container style="height: 95%; width: 100%">
-      <el-aside style="height: 100%; width: 10%; background-color: rgb(238, 241, 246)">
+      <el-aside style="height: 100%; width: 10%; background-color: #F5F7FA">
         <el-menu default-active="1">
           <el-menu-item index="1" style="text-align: center">甘特图</el-menu-item>
         </el-menu>
