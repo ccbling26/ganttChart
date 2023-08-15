@@ -2,6 +2,7 @@ package apis
 
 import (
 	"backend/config"
+	"backend/src/common/response"
 	"backend/src/models"
 	"github.com/gin-gonic/gin"
 )
@@ -15,9 +16,5 @@ func QueryProductLines(c *gin.Context) {
 			"label": v,
 		})
 	}
-	c.JSON(200, map[string]interface{}{
-		"code": 20001,
-		"msg":  "查询成功",
-		"data": data,
-	})
+	response.Success(c, response.GetSuccess, "查询成功", data)
 }

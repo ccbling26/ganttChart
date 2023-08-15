@@ -1,8 +1,11 @@
 package config
 
 import (
+	"backend/src/utils"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -12,6 +15,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"reflect"
 	"time"
 )
 
@@ -81,6 +85,15 @@ func initialConfig() {
 		panic(err)
 	}
 	Global.ConfigViper = vip
+}
+
+func initialLog() {
+	createRootDir()
+	setLogLevel()
+	if Global.Config.Log.ShowLine {
+		options = append(options, zap.AddCaller())
+	}
+	Global.Logger = zap.New(getZapCore(), options...)
 }
 
 func initialDB() {
@@ -163,13 +176,21 @@ func getGormLogWriter() logger.Writer {
 	return log.New(writer, "\r\n", log.LstdFlags)
 }
 
-func initialLog() {
-	createRootDir()
-	setLogLevel()
-	if Global.Config.Log.ShowLine {
-		options = append(options, zap.AddCaller())
+func initialValidator() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		// 注册自定义验证器
+		err := v.RegisterValidation("mobile", utils.ValidateMobile)
+		if err != nil {
+			Global.Logger.Error("Validation register failed!", zap.Any("err", err.Error()))
+			panic(err)
+		}
+		// 注册自定义 json tag 函数
+		v.RegisterTagNameFunc(
+			func(field reflect.StructField) string {
+				return field.Tag.Get("json")
+			},
+		)
 	}
-	Global.Logger = zap.New(getZapCore(), options...)
 }
 
 func InitialGlobal() {
@@ -188,4 +209,7 @@ func InitialGlobal() {
 
 	// 初始化数据库
 	initialDB()
+
+	// 初始化验证器
+	initialValidator()
 }

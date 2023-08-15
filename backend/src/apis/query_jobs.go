@@ -2,11 +2,12 @@ package apis
 
 import (
 	"backend/config"
+	"backend/src/common/request"
+	"backend/src/common/response"
 	"backend/src/models"
 	"backend/src/utils"
 	"math"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -105,30 +106,16 @@ func generateJobsData(productLines []string, startTimestamp int64, endTimestamp 
 }
 
 func QueryJobs(c *gin.Context) {
-	res := map[string]interface{}{
-		"code": 20001,
-		"msg":  "查询成功",
-		"data": map[string]interface{}{},
-	}
-	productLines, ok := c.GetQueryArray("productLines")
-	startTimestamp, err1 := strconv.ParseInt(c.Query("startTimestamp"), 10, 64)
-	endTimestamp, err2 := strconv.ParseInt(c.Query("endTimestamp"), 10, 64)
-	faultTimestamp, err3 := strconv.ParseInt(c.Query("faultTimestamp"), 10, 64)
-	if !ok {
-		res["code"] = 20002
-		res["msg"] = "缺少必填参数: 产品线"
-	} else if err1 != nil {
-		res["code"] = 20002
-		res["msg"] = "开始时间解析失败"
-	} else if err2 != nil {
-		res["code"] = 20002
-		res["msg"] = "结束时间解析失败"
-	} else if err3 != nil {
-		res["code"] = 20002
-		res["msg"] = "故障时间解析失败"
+	var jobSearcher request.JobsSearcher
+	if err := c.ShouldBindQuery(&jobSearcher); err != nil {
+		response.Error(c, response.ValidationError, request.GetErrorMsg(jobSearcher, err))
 	} else {
-		data := generateJobsData(productLines, startTimestamp, endTimestamp, faultTimestamp)
-		res["data"] = data
+		data := generateJobsData(
+			jobSearcher.ProductLines,
+			jobSearcher.StartTimeStamp,
+			jobSearcher.EndTimeStamp,
+			jobSearcher.FaultTimeStamp,
+		)
+		response.Success(c, response.GetSuccess, "查询成功", data)
 	}
-	c.JSON(200, res)
 }

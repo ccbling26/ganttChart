@@ -347,7 +347,7 @@ export default {
           return [];
         }
         const data = response.data;
-        if (data.code !== 20001) {
+        if (data.code !== 20000) {
           alert("接口请求失败，错误信息：" + data.msg);
           return [];
         }
@@ -408,7 +408,7 @@ async function queryJobs(productLines, startTimestamp, endTimestamp, faultTimest
       return [];
     }
     const data = response.data;
-    if (data.code !== 20001) {
+    if (data.code !== 20000) {
       alert("接口请求失败，错误信息：" + data.msg);
       return [];
     }
