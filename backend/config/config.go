@@ -5,9 +5,14 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"io"
+	"log"
 	"os"
+	"time"
 )
 
 type ServiceConfig struct {
@@ -16,13 +21,18 @@ type ServiceConfig struct {
 }
 
 type DBConfig struct {
-	IP          string `mapstructure:"ip" json:"ip" yaml:"ip"`
-	Port        int    `mapstructure:"port" json:"port" yaml:"port"`
-	User        string `mapstructure:"user" json:"user" yaml:"user"`
-	Password    string `mapstructure:"password" json:"password" yaml:"password"`
-	Database    string `mapstructure:"database" json:"database" yaml:"database"`
-	MaxIdleConn int    `mapstructure:"maxIdleConn" json:"max_idle_conn" yaml:"max_idle_conn"`
-	MaxOpenConn int    `mapstructure:"maxOpenConn" json:"max_open_conn" yaml:"max_open_conn"`
+	Driver              string `mapstructure:"driver" json:"driver" yaml:"driver"`
+	Host                string `mapstructure:"host" json:"host" yaml:"host"`
+	Port                int    `mapstructure:"port" json:"port" yaml:"port"`
+	User                string `mapstructure:"user" json:"user" yaml:"user"`
+	Password            string `mapstructure:"password" json:"password" yaml:"password"`
+	Charset             string `mapstructure:"" json:"charset" yaml:"charset"`
+	Database            string `mapstructure:"database" json:"database" yaml:"database"`
+	MaxIdleConn         int    `mapstructure:"max_idle_conn" json:"max_idle_conn" yaml:"max_idle_conn"`
+	MaxOpenConn         int    `mapstructure:"max_open_conn" json:"max_open_conn" yaml:"max_open_conn"`
+	EnableFileLogWriter bool   `mapstructure:"enable_file_log_writer" json:"enable_file_log_writer" yaml:"enable_file_log_writer"`
+	LogMode             string `mapstructure:"log_mode" json:"log_mode" yaml:"log_mode"`
+	LogFilename         string `mapstructure:"log_filename" json:"log_filename" yaml:"log_filename"`
 }
 
 type Config struct {
@@ -73,25 +83,84 @@ func initialConfig() {
 	Global.ConfigViper = vip
 }
 
+func initialDB() {
+	switch Global.Config.DB.Driver {
+	case "mysql":
+		initialMySQL()
+	default:
+		panic("只支持 MySQL 目前")
+	}
+}
+
 func initialMySQL() {
 	// parameter details: https://github.com/go-sql-driver/mysql#parameters
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		Global.Config.DB.User,
 		Global.Config.DB.Password,
-		Global.Config.DB.IP,
+		Global.Config.DB.Host,
 		Global.Config.DB.Port,
 		Global.Config.DB.Database,
 	)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
+	if db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		// 禁止自动创建外键约束
+		DisableForeignKeyConstraintWhenMigrating: true,
+		// 使用自定义 Logger
+		Logger: getGormLogger(),
+	}); err != nil {
+		Global.Logger.Error("MySQL init failed! Details: ", zap.Any("err", err))
 		panic(fmt.Errorf("MySQL init failed! Details: %s\n", err))
-	}
-	sqlDB, _ := db.DB()
-	sqlDB.SetMaxIdleConns(Global.Config.DB.MaxIdleConn)
-	sqlDB.SetMaxOpenConns(Global.Config.DB.MaxOpenConn)
+	} else {
+		sqlDB, _ := db.DB()
+		sqlDB.SetMaxIdleConns(Global.Config.DB.MaxIdleConn)
+		sqlDB.SetMaxOpenConns(Global.Config.DB.MaxOpenConn)
 
-	Global.DB = db
+		Global.DB = db
+	}
+}
+
+func getGormLogger() logger.Interface {
+	var logMode logger.LogLevel
+
+	switch Global.Config.DB.LogMode {
+	case "silent":
+		logMode = logger.Silent
+	case "error":
+		logMode = logger.Error
+	case "warn":
+		logMode = logger.Warn
+	case "info":
+		logMode = logger.Info
+	default:
+		logMode = logger.Info
+	}
+
+	return logger.New(getGormLogWriter(), logger.Config{
+		// 慢 SQL 阈值
+		SlowThreshold: 200 * time.Microsecond,
+		// 日志级别
+		LogLevel: logMode,
+		// 是否忽略 ErrRecordNotFound（记录未找到错误）
+		IgnoreRecordNotFoundError: false,
+		// 是否允许彩色打印
+		Colorful: !Global.Config.DB.EnableFileLogWriter,
+	})
+}
+
+func getGormLogWriter() logger.Writer {
+	var writer io.Writer
+	if Global.Config.DB.EnableFileLogWriter {
+		writer = &lumberjack.Logger{
+			Filename:   Global.Config.Log.RootDir + "/" + Global.Config.DB.LogFilename,
+			MaxSize:    Global.Config.Log.MaxSize,
+			MaxBackups: Global.Config.Log.MaxBackups,
+			MaxAge:     Global.Config.Log.MaxAge,
+			Compress:   Global.Config.Log.Compress,
+		}
+	} else {
+		writer = os.Stdout
+	}
+	return log.New(writer, "\r\n", log.LstdFlags)
 }
 
 func initialLog() {
@@ -114,9 +183,9 @@ func InitialGlobal() {
 	// 加载配置
 	initialConfig()
 
-	// 加载 MySQL
-	initialMySQL()
-
 	// 初始化 logger
 	initialLog()
+
+	// 初始化数据库
+	initialDB()
 }

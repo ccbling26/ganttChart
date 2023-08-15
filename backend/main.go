@@ -9,6 +9,13 @@ import (
 
 func main() {
 	config.InitialGlobal()
+	// 程序关闭前，释放数据库连接
+	defer func() {
+		if config.Global.DB != nil {
+			db, _ := config.Global.DB.DB()
+			_ = db.Close()
+		}
+	}()
 
 	r := gin.Default()
 	src.InitRouter(r)
