@@ -1,4 +1,5 @@
 service:
+  env: "local"
   addr: ":8081"
 db:
   ip: "127.0.0.1"
@@ -6,5 +7,15 @@ db:
   user: "root"
   password: "root"
   database: "example"
-  maxIdleConn: 10
-  maxOpenConn: 100
+  max_idle_conn: 10
+  max_open_conn: 100
+log:
+  level: info
+  root_dir: ./logs
+  filename: debug.log
+  format: json
+  show_line: true
+  max_backups: 3
+  max_size: 500
+  max_age: 365
+  compress: true

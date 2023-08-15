@@ -15,6 +15,7 @@ func main() {
 
 	err := r.Run(config.Global.Config.Service.Addr)
 	if err != nil {
+		config.Global.Logger.Panic(err.Error())
 		panic(err.Error())
 	}
 }
