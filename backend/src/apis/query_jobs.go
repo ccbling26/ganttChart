@@ -112,9 +112,9 @@ func QueryJobs(c *gin.Context) {
 	} else {
 		data := generateJobsData(
 			jobSearcher.ProductLines,
-			jobSearcher.StartTimeStamp,
-			jobSearcher.EndTimeStamp,
-			jobSearcher.FaultTimeStamp,
+			jobSearcher.StartTimestamp,
+			jobSearcher.EndTimestamp,
+			jobSearcher.FaultTimestamp,
 		)
 		response.Success(c, response.GetSuccess, "查询成功", data)
 	}
