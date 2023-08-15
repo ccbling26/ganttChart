@@ -14,3 +14,4 @@ frontend/pnpm-debug.log*
 # backend
 backend/config/config.yaml
 backend/logs
+backend/static
