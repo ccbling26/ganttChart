@@ -39,10 +39,17 @@ type DBConfig struct {
 	LogFilename         string `mapstructure:"log_filename" json:"log_filename" yaml:"log_filename"`
 }
 
+type App struct {
+	Host      string `mapstructure:"host" json:"host" yaml:"host"`
+	AppID     string `mapstructure:"app_id" json:"app_id" yaml:"app_id"`
+	AppSecret string `mapstructure:"app_secret" json:"app_secret" yaml:"app_secret"`
+}
+
 type Config struct {
 	Service ServiceConfig `mapstructure:"service" json:"service" yaml:"service"`
 	DB      DBConfig      `mapstructure:"db" json:"db" yaml:"db"`
 	Log     Log           `mapstructure:"log" json:"log" yaml:"log"`
+	App     App           `mapstructure:"app" json:"app" yaml:"app"`
 }
 
 type GlobalConfig struct {

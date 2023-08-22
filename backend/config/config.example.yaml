@@ -24,3 +24,7 @@ log:
   max_size: 500
   max_age: 365
   compress: true
+app:
+  host: ""
+  app_id: ""
+  app_secret: ""

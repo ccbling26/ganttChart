@@ -1,19 +1,12 @@
 <template>
-  <body>
   <div id="app">
-    <GanttChart/>
+    <router-view></router-view>
   </div>
-  </body>
 </template>
 
 <script>
-import GanttChart from './components/GanttChart.vue'
-
 export default {
   name: 'App',
-  components: {
-    GanttChart
-  }
 }
 </script>
 
