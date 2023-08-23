@@ -144,6 +144,12 @@ export default {
       ],
     }
     this.chart.setOption(initialOption);
+    this.chart.on("click", function(params) {
+      const data = params.data;
+      if (data && data.value && data.value[4]) {
+        window.location.href = data.value[4];
+      }
+    })
   },
   computed: {
     timeRangePickerOptions() {
@@ -268,7 +274,10 @@ export default {
               formatter: function (params) {
                 const start = moment(params.value[1]).format("YYYY-MM-DD HH:mm:ss")
                 const end = moment(params.value[2]).format("YYYY-MM-DD HH:mm:ss")
-                return "产品线: " + params.name + "<br>开始时间: " + start + "<br>结束时间: " + end;
+                const user = params.value[3]
+                const link = params.value[4]
+                const codeUrl = params.value[5]
+                return "产品线：" + params.name + "<br>时间范围：" + start + " - " + end + "<br>用户：" + user + "<br>链接：" + link + "<br>代码仓：" + codeUrl;
               }
             }
           },

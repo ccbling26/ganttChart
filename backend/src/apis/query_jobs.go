@@ -6,6 +6,7 @@ import (
 	"backend/src/common/response"
 	"backend/src/models"
 	"backend/src/utils"
+	"fmt"
 	"math"
 	"sort"
 	"strings"
@@ -83,19 +84,22 @@ func generateJobsData(productLines []string, startTimestamp int64, endTimestamp 
 		job := jobData.Job
 		start := jobData.Start.Unix() * 1000
 		end := jobData.UpdateTime.Unix() * 1000
+		user := jobData.User
+		codeUrl := jobData.CodeUrl
+		link := fmt.Sprintf("%s?id=%d", config.Global.Config.Service.JobLink, jobData.TaskID)
 
 		val, ok := intermediateJobData[job]
 		if ok {
 			val.priority = calPriority(val.priority, start, faultTimestamp, duration)
 			val.values = append(
 				val.values,
-				[]interface{}{0, start, end},
+				[]interface{}{0, start, end, user, link, codeUrl},
 			)
 			intermediateJobData[job] = val
 		} else {
 			intermediateJobData[job] = IntermediateJobItem{
 				priority: calPriority(math.MaxInt64, start, faultTimestamp, duration),
-				values:   [][]interface{}{{0, start, end}},
+				values:   [][]interface{}{{0, start, end, user, link, codeUrl}},
 			}
 		}
 	}

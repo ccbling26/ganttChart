@@ -1,6 +1,8 @@
 service:
   env: "local"
   addr: ":8081"
+  job_link: ""
+  key_center_sid: ""
 db:
   driver: "mysql"
   host: "127.0.0.1"

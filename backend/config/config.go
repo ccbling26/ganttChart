@@ -20,8 +20,10 @@ import (
 )
 
 type ServiceConfig struct {
-	Env  string `mapstructure:"env" json:"env" yaml:"env"`
-	Addr string `mapstructure:"addr" json:"addr" yaml:"addr"`
+	Env          string `mapstructure:"env" json:"env" yaml:"env"`
+	Addr         string `mapstructure:"addr" json:"addr" yaml:"addr"`
+	JobLink      string `mapstructure:"job_link" json:"job_link" yaml:"job_link"`
+	KeyCenterSID string `mapstructure:"key_center_sid" json:"key_center_sid" yaml:"key_center_sid"`
 }
 
 type DBConfig struct {

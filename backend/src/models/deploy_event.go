@@ -13,7 +13,7 @@ type DeployEvent struct {
 	Job        string    `json:"job" gorm:"->;column:job"`
 	Cluster    string    `json:"cluster" gorm:"->;column:cluster"`
 	JobCluster string    `json:"job_cluster" gorm:"->;column:job_cluster"`
-	CodeUrl    string    `json:"code_url" gorm:"->;column:code_rrl"`
+	CodeUrl    string    `json:"code_url" gorm:"->;column:code_url"`
 	State      string    `json:"state" gorm:"->;column:state"`
 	User       string    `json:"user" gorm:"->;column:user"`
 	Version    string    `json:"version" gorm:"->;column:version"`
@@ -27,7 +27,7 @@ func (DeployEvent) TableName() string {
 func QueryJobs(db *gorm.DB, productLines []string, start time.Time, end time.Time) []DeployEvent {
 	var res []DeployEvent
 	db.Select(
-		[]string{"start", "job", "update_time"},
+		[]string{"task_id", "start", "job", "code_url", "user", "update_time"},
 	).Where(
 		"start >= ? AND start <= ? AND tag IN ?",
 		start, end, productLines,
