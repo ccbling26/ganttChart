@@ -84,7 +84,9 @@ export default {
     this.chart = ECharts.init(document.getElementById("ganttChart"));
     const now = new Date()
     const initialOption = {
-      tooltip: {},
+      tooltip: {
+        enterable: true,
+      },
       title: {
         text: "甘特图",
         left: "center",
@@ -144,7 +146,7 @@ export default {
       ],
     }
     this.chart.setOption(initialOption);
-    this.chart.on("click", function(params) {
+    this.chart.on("dblclick", function(params) {
       const data = params.data;
       if (data && data.value && data.value[4]) {
         window.location.href = data.value[4];
@@ -277,7 +279,13 @@ export default {
                 const user = params.value[3]
                 const link = params.value[4]
                 const codeUrl = params.value[5]
-                return "产品线：" + params.name + "<br>时间范围：" + start + " - " + end + "<br>用户：" + user + "<br>链接：" + link + "<br>代码仓：" + codeUrl;
+                return "<table>" +
+                    "<tr><td style='font-weight: bold'>产品线：</td><td>" + params.name + "</td></tr>" +
+                    "<tr><td style='font-weight: bold'>时间范围：</td><td>" + start + " 至 " + end + "</td></tr>" +
+                    "<tr><td style='font-weight: bold'>用户：</td><td>" + user + "</td></tr>" +
+                    "<tr><td style='font-weight: bold'>任务链接：</td><td>" + "<a href='" + link + "'>" + link + "</a>" + "</td></tr>" +
+                    "<tr><td style='font-weight: bold'>代码链接：</td><td>" + codeUrl + "</td></tr>" +
+                    "</table>";
               }
             }
           },
@@ -366,6 +374,16 @@ export default {
       } catch (error) {
         alert("接口请求异常")
         return [];
+      }
+    }
+  },
+  watch: {
+    time_range: {
+      immediate: true,
+      handler() {
+        if (this.fault_time < this.time_range[0] || this.fault_time > this.time_range[1]) {
+          this.fault_time = this.time_range[0]
+        }
       }
     }
   }
